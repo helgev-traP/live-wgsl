@@ -51,7 +51,7 @@ fn get_and_send_code(
     };
 
     if let Err(e) = channel.send_event(code) {
-        eprintln!("Error when sending event: {}", e);
+        eprint!("\n\nError when sending event: {}\n\n", e);
         panic!();
     }
 }

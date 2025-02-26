@@ -176,7 +176,7 @@ impl ApplicationHandler<String> for App<'_> {
             return;
         }
 
-        println!("Fragment shader code updated!");
+        print!("\n\nFragment shader code updated!\n\n");
 
         surface_texture.present();
         self.time_from_update = std::time::Instant::now();

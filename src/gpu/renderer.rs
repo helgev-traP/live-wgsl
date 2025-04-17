@@ -49,6 +49,9 @@ pub struct ViewportInfo {
 }
 
 pub struct Renderer {
+    // format
+    surface_format: wgpu::TextureFormat,
+
     // card
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
@@ -168,13 +171,7 @@ impl Renderer {
                 conservative: false,
             },
             // depth_stencil: None,
-            depth_stencil: Some(wgpu::DepthStencilState {
-                format: wgpu::TextureFormat::Depth32Float,
-                depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less,
-                stencil: wgpu::StencilState::default(),
-                bias: wgpu::DepthBiasState::default(),
-            }),
+            depth_stencil: None,
             multisample: wgpu::MultisampleState {
                 count: 4,
                 mask: !0,
@@ -185,6 +182,7 @@ impl Renderer {
         });
 
         Self {
+            surface_format,
             vertex_buffer,
             index_buffer,
             binding_group_layout,
@@ -239,7 +237,7 @@ impl Renderer {
                     module: &self.f_shader,
                     entry_point: Some("fs_main"),
                     targets: &[Some(wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                        format: self.surface_format,
                         blend: Some(wgpu::BlendState::REPLACE),
                         write_mask: wgpu::ColorWrites::ALL,
                     })],
@@ -258,13 +256,7 @@ impl Renderer {
                     conservative: false,
                 },
                 // depth_stencil: None,
-                depth_stencil: Some(wgpu::DepthStencilState {
-                    format: wgpu::TextureFormat::Depth32Float,
-                    depth_write_enabled: true,
-                    depth_compare: wgpu::CompareFunction::Less,
-                    stencil: wgpu::StencilState::default(),
-                    bias: wgpu::DepthBiasState::default(),
-                }),
+                depth_stencil: None,
                 multisample: wgpu::MultisampleState {
                     count: 4,
                     mask: !0,
@@ -288,7 +280,6 @@ impl Renderer {
         queue: &wgpu::Queue,
         surface_view: &wgpu::TextureView,
         multi_sample_view: &wgpu::TextureView,
-        depth_view: &wgpu::TextureView,
         viewport_info: ViewportInfo
     ) -> Result<(), wgpu::Error> {
         with_validation_error_handling(device, || {
@@ -297,7 +288,6 @@ impl Renderer {
                 queue,
                 surface_view,
                 multi_sample_view,
-                depth_view,
                 viewport_info,
             );
         })
@@ -315,7 +305,6 @@ impl Renderer {
         queue: &wgpu::Queue,
         surface_view: &wgpu::TextureView,
         multi_sample_view: &wgpu::TextureView,
-        depth_view: &wgpu::TextureView,
         viewport_info: ViewportInfo,
     ) {
         // Update the viewport info buffer
@@ -341,14 +330,7 @@ impl Renderer {
                         store: wgpu::StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: depth_view,
-                    depth_ops: Some(wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(1.0),
-                        store: wgpu::StoreOp::Store,
-                    }),
-                    stencil_ops: None,
-                }),
+                depth_stencil_attachment: None,
                 timestamp_writes: None,
                 occlusion_query_set: None,
             });

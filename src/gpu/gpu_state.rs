@@ -12,7 +12,6 @@ pub struct GpuState<'a> {
     surface: wgpu::Surface<'a>,
     surface_format: wgpu::TextureFormat,
     multisample_texture: wgpu::Texture,
-    depth_texture: wgpu::Texture,
 }
 
 impl GpuState<'_> {
@@ -97,22 +96,7 @@ impl GpuState<'_> {
             mip_level_count: 1,
             sample_count: 4,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        });
-
-        let depth_texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: None,
-            size: wgpu::Extent3d {
-                width: size.width,
-                height: size.height,
-                depth_or_array_layers: 1,
-            },
-            mip_level_count: 1,
-            sample_count: 4,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32Float,
+            format: surface_format,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             view_formats: &[],
         });
@@ -128,7 +112,6 @@ impl GpuState<'_> {
             surface,
             surface_format,
             multisample_texture,
-            depth_texture,
         }
     }
 
@@ -146,10 +129,6 @@ impl GpuState<'_> {
 
     pub fn get_current_texture(&self) -> wgpu::SurfaceTexture {
         self.surface.get_current_texture().unwrap()
-    }
-
-    pub fn get_depth_texture(&self) -> &wgpu::Texture {
-        &self.depth_texture
     }
 
     pub fn get_multisample_texture(&self) -> &wgpu::Texture {
@@ -170,22 +149,6 @@ impl GpuState<'_> {
             self.config.width = size.width;
             self.config.height = size.height;
             self.surface.configure(&self.device, &self.config);
-
-            // Update the depth texture
-            self.depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
-                label: None,
-                size: wgpu::Extent3d {
-                    width: size.width,
-                    height: size.height,
-                    depth_or_array_layers: 1,
-                },
-                mip_level_count: 1,
-                sample_count: 4,
-                dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Depth32Float,
-                usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                view_formats: &[],
-            });
 
             // Update the multisampled texture
             self.multisample_texture = self.device.create_texture(&wgpu::TextureDescriptor {

@@ -45,9 +45,6 @@ impl App<'_> {
         let multi_sample_view =
             multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        let depth_texture = self.state.as_ref().unwrap().get_depth_texture();
-        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
-
         let timer = std::time::Instant::now();
 
         self.renderer.as_ref().unwrap().render(
@@ -55,7 +52,6 @@ impl App<'_> {
             self.state.as_ref().unwrap().get_queue(),
             &surface_view,
             &multi_sample_view,
-            &depth_view,
             crate::gpu::renderer::ViewportInfo {
                 size: self.viewport_size,
                 time_from_start_up: self.time_from_start_up.elapsed().as_secs_f32(),
@@ -157,15 +153,11 @@ impl ApplicationHandler<String> for App<'_> {
         let multi_sample_view =
             multi_sample_texture.create_view(&wgpu::TextureViewDescriptor::default());
 
-        let depth_texture = self.state.as_ref().unwrap().get_depth_texture();
-        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
-
         if let Err(e) = pollster::block_on(self.renderer.as_mut().unwrap().try_render(
             self.state.as_ref().unwrap().get_device(),
             self.state.as_ref().unwrap().get_queue(),
             &surface_view,
             &multi_sample_view,
-            &depth_view,
             crate::gpu::renderer::ViewportInfo {
                 size: self.viewport_size,
                 time_from_start_up: self.time_from_start_up.elapsed().as_secs_f32(),

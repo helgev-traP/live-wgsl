@@ -76,6 +76,9 @@ impl ApplicationHandler<String> for App<'_> {
                 .unwrap(),
         ));
 
+        // rename the window
+        self.window.as_ref().unwrap().set_title("Live wgsl");
+
         // self.window.as_ref().unwrap().set_decorations(false);
 
         // make gpu state

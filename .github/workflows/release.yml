@@ -13,6 +13,9 @@ jobs:
           - target: x86_64-apple-darwin
             os: macos-latest
             ext: ""
+          - target: aarch64-apple-darein
+            os: macos-latest
+            ext: ""
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             ext: ".exe"
@@ -25,7 +28,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          targets: ${{ matrix.target }}
+          target: ${{ matrix.target }}
           override: true
           profile: minimal
 
@@ -33,6 +36,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
+          use-cross: false
           args: --release --target ${{ matrix.target }}
 
       - name: Copy artifact

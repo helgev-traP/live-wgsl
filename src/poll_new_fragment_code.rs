@@ -33,6 +33,8 @@ fn get_and_send_code(
     force: bool,
 ) {
     let Ok(metadata) = std::fs::metadata(path) else {
+        eprintln!("\n\nError when getting metadata: {}", path);
+        eprintln!("File does not exist or permission denied.\n\n");
         return;
     };
 

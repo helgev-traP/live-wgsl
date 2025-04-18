@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            ext: ""
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            ext: ""
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            ext: ""
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: ".exe"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+          profile: minimal
+
+      - name: Build binary
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          use-cross: false
+          args: --release --target ${{ matrix.target }}
+
+      - name: Copy artifact
+        shell: bash
+        run: |
+          BIN_NAME=$(basename $(pwd))
+          BIN_PATH=target/${{ matrix.target }}/release/$BIN_NAME${{ matrix.ext }}
+          OUTPUT_NAME=${BIN_NAME}-${{ matrix.target }}${{ matrix.ext }}
+          mkdir artifacts
+          cp "$BIN_PATH" "artifacts/$OUTPUT_NAME"
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

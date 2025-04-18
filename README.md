@@ -20,7 +20,7 @@ Windows may make a popup saying that the program is not safe to run.
 This is because I do not have a code signing certificate, and the program is not recognized by Windows.
 You need to click "More info" and "Run anyway" to let the program run.
 
-![windows alert](docs\windows_alert.png)
+![windows alert](docs/windows_alert.png)
 
 ## Example
 
@@ -40,4 +40,4 @@ Fragment shader code updated!
 Render time:    100μs
 ```
 
-![default image](docs\default_screen_shot.png)
+![default image](docs/default_screen_shot.png)

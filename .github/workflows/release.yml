@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            ext: ""
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            ext: ""
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            ext: ".exe"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-rust@v1
+        with:
+          rust-version: stable
+          targets: ${{ matrix.target }}
+
+      - name: Build binary
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Copy artifact
+        shell: bash
+        run: |
+          BIN_NAME=$(basename $(pwd))
+          BIN_PATH=target/${{ matrix.target }}/release/$BIN_NAME${{ matrix.ext }}
+          OUTPUT_NAME=${BIN_NAME}-${{ matrix.target }}${{ matrix.ext }}
+          mkdir artifacts
+          cp "$BIN_PATH" "artifacts/$OUTPUT_NAME"
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

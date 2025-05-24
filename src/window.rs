@@ -1,4 +1,5 @@
-use std::sync::Arc;
+use chrono::Timelike;
+use std::{sync::Arc, time::SystemTime};
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
@@ -18,6 +19,8 @@ pub struct App<'a> {
     // time
     time_from_start_up: std::time::Instant,
     time_from_update: std::time::Instant,
+    // update time
+    updated_time: Option<String>,
 }
 
 impl<'a> App<'a> {
@@ -30,6 +33,7 @@ impl<'a> App<'a> {
             viewport_size: [0.0, 0.0],
             time_from_start_up: std::time::Instant::now(),
             time_from_update: std::time::Instant::now(),
+            updated_time: None,
         }
     }
 }
@@ -56,19 +60,28 @@ impl App<'_> {
                 size: self.viewport_size,
                 time_from_start_up: self.time_from_start_up.elapsed().as_secs_f32(),
                 time_from_update: self.time_from_update.elapsed().as_secs_f32(),
-            }
+            },
         );
 
         let render_time = timer.elapsed().as_micros();
 
-        print!("\rRender time: {:>6}μs", render_time);
+        // print!("\r(updated: {:?})Render time: {:>6}μs", self.updated_time, render_time);
+
+        if let Some(updated_time) = self.updated_time.as_deref() {
+            print!(
+                "\r(updated: {}) Render time:{:>5}μs",
+                updated_time, render_time
+            );
+        } else {
+            print!("\rRender time:{:>5}μs", render_time);
+        }
         std::io::Write::flush(&mut std::io::stdout()).unwrap();
 
         surface_texture.present();
     }
 }
 
-impl ApplicationHandler<String> for App<'_> {
+impl ApplicationHandler<(Option<SystemTime>, String)> for App<'_> {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         self.window = Some(Arc::new(
             event_loop
@@ -122,24 +135,25 @@ impl ApplicationHandler<String> for App<'_> {
     }
 
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: winit::event::StartCause) {
-        match cause {
-            winit::event::StartCause::Poll => {
-                self.render();
-            }
-            _ => {}
+        if cause == winit::event::StartCause::Poll {
+            self.render();
         }
     }
 
-    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: String) {
+    fn user_event(&mut self, event_loop: &ActiveEventLoop, event: (Option<SystemTime>, String)) {
         // event is the new fragment code
 
         // update the fragment code and pipeline
+
+        let (update_time, fragment_code) = event;
+        self.updated_time =
+            update_time.map(|update_time| format_utc_to_string(&update_time.into()));
 
         if let Err(e) = pollster::block_on(
             self.renderer
                 .as_mut()
                 .unwrap()
-                .update_fragment(&event, self.state.as_ref().unwrap().get_device()),
+                .update_fragment(&fragment_code, self.state.as_ref().unwrap().get_device()),
         ) {
             eprintln!("Error:\n{}", e);
             return;
@@ -165,15 +179,22 @@ impl ApplicationHandler<String> for App<'_> {
                 size: self.viewport_size,
                 time_from_start_up: self.time_from_start_up.elapsed().as_secs_f32(),
                 time_from_update: self.time_from_update.elapsed().as_secs_f32(),
-            }
+            },
         )) {
             eprintln!("Error:\n{}", e);
             return;
         }
 
-        print!("\n\nFragment shader code updated!\n\n");
-
         surface_texture.present();
         self.time_from_update = std::time::Instant::now();
     }
+}
+
+fn format_utc_to_string(utc_time: &chrono::DateTime<chrono::Local>) -> String {
+    format!(
+        "{:02}:{:02}:{:02}",
+        utc_time.hour(),
+        utc_time.minute(),
+        utc_time.second(),
+    )
 }

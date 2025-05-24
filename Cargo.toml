@@ -3,15 +3,20 @@ name = "live-wgsl"
 version = "0.1.0"
 edition = "2021"
 
+[profile.release]
+panic = "abort"
+
 [dependencies]
 env_logger = "0.11.6"
 # runtime
-tokio = { version = "1.43.0", features = ["full"] }
+tokio = { version = "1.43.0", features = ["rt-multi-thread", "macros", "time"] }
 pollster = "0.3"
 # graphics
-wgpu = "24"
+wgpu = "25"
 bytemuck = { version = "1.21", features = ["derive"] }
 winit = "0.30"
 # math
 nalgebra = { version = "0.33", features = ["bytemuck"] }
 clap = { version = "4.5.31", features = ["derive"] }
+# time
+chrono = "0.4.41"

@@ -50,8 +50,8 @@ impl GpuState<'_> {
                         wgpu::Limits::default()
                     },
                     memory_hints: wgpu::MemoryHints::default(),
-                }),
-                None, // Trace path
+                    trace: wgpu::Trace::Off,
+                })
             )
             .await
             .unwrap();

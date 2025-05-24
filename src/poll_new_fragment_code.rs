@@ -1,7 +1,9 @@
+use std::time::SystemTime;
+
 // check if the fragment code is updated every x ms, if it is, send a message to the main thread
 pub async fn poll_new_fragment_code(
     file_path: String,
-    channel: winit::event_loop::EventLoopProxy<String>,
+    channel: winit::event_loop::EventLoopProxy<(Option<SystemTime>, String)>,
     interval: u64,
 ) {
     let mut last_modified;
@@ -16,44 +18,47 @@ pub async fn poll_new_fragment_code(
         tokio::time::sleep(tokio::time::Duration::from_millis(interval)).await;
     }
 
-    // first event
-    get_and_send_code(&file_path, &mut last_modified, &channel, true);
+    let code = std::fs::read_to_string(&file_path).unwrap();
+    send_code_update(None, code, &channel);
 
     loop {
         tokio::time::sleep(tokio::time::Duration::from_millis(interval)).await;
 
-        get_and_send_code(&file_path, &mut last_modified, &channel, false);
+        if let Some(code) = is_code_updated(&file_path, &mut last_modified) {
+            send_code_update(Some(last_modified), code, &channel);
+        }
     }
 }
 
-fn get_and_send_code(
-    path: &str,
-    last_modified: &mut std::time::SystemTime,
-    channel: &winit::event_loop::EventLoopProxy<String>,
-    force: bool,
-) {
+fn is_code_updated(path: &str, last_modified: &mut std::time::SystemTime) -> Option<String> {
     let Ok(metadata) = std::fs::metadata(path) else {
         eprintln!("\n\nError when getting metadata: {}", path);
-        eprintln!("File does not exist or permission denied.\n\n");
-        return;
+        eprintln!("File does not exist or permission denied.\n");
+        std::process::exit(1);
     };
 
     let Ok(modified) = metadata.modified() else {
-        return;
+        return None;
     };
 
-    if modified == *last_modified && !force {
-        return;
+    if modified == *last_modified {
+        return None;
     }
 
     *last_modified = modified;
 
-    let Ok(code) = std::fs::read_to_string(path) else {
-        return;
-    };
+    std::fs::read_to_string(path)
+        .map_err(|e| eprintln!("\n\nError when reading file: {}\n\n{}", path, e))
+        .ok()
+}
 
-    if let Err(e) = channel.send_event(code) {
-        eprint!("\n\nError when sending event: {}\n\n", e);
-        panic!();
-    }
+fn send_code_update(
+    time: Option<SystemTime>,
+    string: String,
+    channel: &winit::event_loop::EventLoopProxy<(Option<SystemTime>, String)>,
+) {
+    channel
+        .send_event((time, string))
+        .map_err(|e| eprintln!("\n\nError when sending event: {}\n\n", e))
+        .ok();
 }

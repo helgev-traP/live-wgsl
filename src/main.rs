@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use clap::Parser;
 use window::App;
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -26,7 +28,8 @@ async fn main() {
     let default_fragment_code = include_str!("./fragment_default.wgsl");
 
     // build event loop
-    let event_loop: EventLoop<String> = EventLoop::with_user_event().build().unwrap();
+    let event_loop: EventLoop<(Option<SystemTime>, String)> =
+        EventLoop::with_user_event().build().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
     let proxy = event_loop.create_proxy();
 
@@ -43,12 +46,14 @@ async fn main() {
     }
 
     // show info
-    println!("Edit shader file with your favorite editor");
+
+    println!();
+    println!("Edit shader file with your favorite editor!");
     println!(
-        "Shader file: {}\n",
+        "Shader file: {}",
         std::fs::canonicalize(&file_path).unwrap().display()
     );
-
+    println!();
     println!("Polling interval: {} ms\n", interval);
 
     println!("-------------------------------\n");

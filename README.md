@@ -43,7 +43,9 @@ Polling interval: 200 ms
 
 ## Operation confirmed
 
-- Windows 11
-- Linux (Ubuntu 24.04)
+- Windows 11 (Vulkan/DX12 backend)
+- Linux (Ubuntu 24.04 Vulkan backend)
 
-(macOS is not tested, because I do not have a macOS machine. If you have a macOS machine, please try it and let me know if it works.)
+(tested with Intel and AMD GPUs)
+
+(MacOS is not tested, because I do not have a MacOS machine. If you have one, please try it and let me know if it works. I think it should work.)

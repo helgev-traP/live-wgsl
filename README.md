@@ -24,20 +24,26 @@ You need to click "More info" and "Run anyway" to let the program run.
 
 ## Example
 
+run on windows:
+
 ```bash
 $ live-wgsl
-Edit shader file with your favorite editor
+
+Edit shader file with your favorite editor!
 Shader file: \\?\C:\path\to\live.wgsl
 
 Polling interval: 200 ms
 
 -------------------------------
 
-Render time:   3122μs
-
-Fragment shader code updated!
-
-Render time:    100μs
+(updated: 22:57:56) Render time:  233μs
 ```
 
 ![default image](docs/default_screen_shot.png)
+
+## Operation confirmed
+
+- Windows 11
+- Linux (Ubuntu 24.04)
+
+(macOS is not tested, because I do not have a macOS machine. If you have a macOS machine, please try it and let me know if it works.)
